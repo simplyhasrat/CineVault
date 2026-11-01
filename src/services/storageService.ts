@@ -1,8 +1,8 @@
 import { CollectionStats, Movie, UserProfile } from '../types/movie';
 import { INITIAL_MOVIES, INITIAL_USER_PROFILE } from '../data/initialMovies';
 
-const STORAGE_KEY_MOVIES = 'cinevault_movies_v1';
-const STORAGE_KEY_PROFILE = 'cinevault_profile_v1';
+const STORAGE_KEY_MOVIES = 'cinevault_movies_v2';
+const STORAGE_KEY_PROFILE = 'cinevault_profile_v2';
 
 export function loadMovies(): Movie[] {
   try {
@@ -12,9 +12,11 @@ export function loadMovies(): Movie[] {
       return INITIAL_MOVIES;
     }
     const parsed = JSON.parse(data);
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    // If user has old small sample (less than 100 movies), auto-upgrade to their complete 1,011 diary
+    if (Array.isArray(parsed) && parsed.length >= 100) {
       return parsed;
     }
+    saveMovies(INITIAL_MOVIES);
     return INITIAL_MOVIES;
   } catch (err) {
     console.error('Error loading movies from localStorage', err);

@@ -25,18 +25,20 @@ interface LibraryViewProps {
 
 const ALL_GENRES = [
   'All',
+  'Horror',
   'Sci-Fi',
   'Action',
   'Drama',
-  'Thriller',
   'Comedy',
   'Romance',
-  'Crime',
+  'Thriller',
   'Animation',
-  'Adventure',
   'Mystery',
-  'Horror',
-  'Music'
+  'Crime',
+  'Family',
+  'Adventure',
+  'Fantasy',
+  'Stand-Up'
 ];
 
 export const LibraryView: React.FC<LibraryViewProps> = ({
@@ -54,11 +56,18 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
   const [minRating, setMinRating] = useState<number>(0);
   const [sortBy, setSortBy] = useState<SortField>('dateWatched_desc');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [visibleCount, setVisibleCount] = useState<number>(48);
 
   // Sync initialStatusFilter if prop changes (e.g. clicked from nav)
   React.useEffect(() => {
     setStatusFilter(initialStatusFilter);
+    setVisibleCount(48);
   }, [initialStatusFilter]);
+
+  // Reset pagination on filter or search changes
+  React.useEffect(() => {
+    setVisibleCount(48);
+  }, [searchQuery, selectedGenre, minRating, statusFilter, sortBy]);
 
   // Filtered and Sorted list
   const filteredMovies = useMemo(() => {
@@ -359,30 +368,72 @@ export const LibraryView: React.FC<LibraryViewProps> = ({
             </button>
           </div>
         </div>
-      ) : viewMode === 'grid' ? (
-        <div className="poster-grid">
-          {filteredMovies.map((movie) => (
-            <MovieCard
-              key={movie.id}
-              movie={movie}
-              onSelect={onSelectMovie}
-              onToggleFavorite={onToggleFavorite}
-              viewMode="grid"
-            />
-          ))}
-        </div>
       ) : (
-        <div className="movie-list-view">
-          {filteredMovies.map((movie) => (
-            <MovieCard
-              key={movie.id}
-              movie={movie}
-              onSelect={onSelectMovie}
-              onToggleFavorite={onToggleFavorite}
-              viewMode="list"
-            />
-          ))}
-        </div>
+        <>
+          {viewMode === 'grid' ? (
+            <div className="poster-grid">
+              {filteredMovies.slice(0, visibleCount).map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  onSelect={onSelectMovie}
+                  onToggleFavorite={onToggleFavorite}
+                  viewMode="grid"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="movie-list-view">
+              {filteredMovies.slice(0, visibleCount).map((movie) => (
+                <MovieCard
+                  key={movie.id}
+                  movie={movie}
+                  onSelect={onSelectMovie}
+                  onToggleFavorite={onToggleFavorite}
+                  viewMode="list"
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Load More Pagination Bar */}
+          {filteredMovies.length > visibleCount && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '12px',
+                marginTop: '40px',
+                padding: '24px',
+                background: 'var(--bg-surface-1)',
+                border: '1px solid var(--border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+              }}
+            >
+              <div style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+                Showing <strong style={{ color: '#fff' }}>{Math.min(visibleCount, filteredMovies.length)}</strong> of{' '}
+                <strong style={{ color: '#fff' }}>{filteredMovies.length}</strong> movies
+              </div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => setVisibleCount((prev) => prev + 48)}
+                  style={{ padding: '10px 24px' }}
+                >
+                  Load Next 48 Movies
+                </button>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setVisibleCount(filteredMovies.length)}
+                  style={{ padding: '10px 20px' }}
+                >
+                  Show All ({filteredMovies.length})
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

@@ -20,6 +20,10 @@ export const MovieCard: React.FC<MovieCardProps> = ({
 }) => {
   const [imgSrc, setImgSrc] = React.useState(movie.posterPath || FALLBACK_POSTER);
 
+  React.useEffect(() => {
+    setImgSrc(movie.posterPath || FALLBACK_POSTER);
+  }, [movie.posterPath]);
+
   const handleImageError = () => {
     setImgSrc(FALLBACK_POSTER);
   };
